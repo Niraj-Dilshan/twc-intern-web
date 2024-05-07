@@ -1,35 +1,54 @@
-import { useContext, useEffect, useState } from "react";
-import { createContext } from "react";
+import create from 'zustand';
+import { createContext, useContext, useEffect } from 'react';
 
-const AuthContext = createContext();
+// Define types for state
+interface AuthState {
+  token: string | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: (newToken: string) => void;
+  logout: () => void;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+// Create Zustand store
+const useAuthStore = create<AuthState>((set) => ({
+  token: null,
+  isAuthenticated: false,
+  loading: true,
+  login: (newToken) =>
+    set((state) => ({
+     ...state,
+      token: newToken,
+      isAuthenticated: true,
+      loading: false,
+    })),
+  logout: () =>
+    set((state) => ({
+     ...state,
+      token: null,
+      isAuthenticated: false,
+      loading: false,
+    })),
+}));
 
+// Export context for use in components
+export const AuthContext = createContext<AuthState | undefined>(undefined);
+
+// Provider component
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const authStore = useAuthStore();
+  const { token, isAuthenticated, loading, login, logout } = authStore;
+
+  // Fetch token from local storage
   useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem("user_data"));
-
-    if (storedData && storedData.userToken) {
-      setToken(storedData.userToken);
-      setIsAuthenticated(true);
+    const storedData = localStorage.getItem('user_data');
+    if (storedData) {
+      const { userToken } = JSON.parse(storedData);
+      if (userToken) {
+        login(userToken);
+      }
     }
-    setLoading(false);
-  }, []);
-
-  const login = (newToken) => {
-    const data = { userToken: newToken };
-    localStorage.setItem("user_data", JSON.stringify(data));
-    setToken(newToken);
-    setIsAuthenticated(true);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("user_data");
-    setToken(null);
-    setIsAuthenticated(false);
-  };
+  }, [login]);
 
   const contextValue = {
     token,
@@ -39,9 +58,14 @@ export const AuthProvider = ({ children }) => {
     logout,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+// Custom hook to use AuthContext
+export const useAuth = (): AuthState => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

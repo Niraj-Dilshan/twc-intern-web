@@ -1,79 +1,65 @@
-import { useState } from "react";
+// useUserAPI.ts
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "react-query";
+import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+interface Values {
+  email: string;
+  password: string;
+  confirmPassword?: string;
+}
+
+interface ErrorResponse {
+  message: string;
+}
+
+const BASE_URL: string = import.meta.env.VITE_API_URL || '';
 
 const useUserAPI = () => {
   const { login } = useAuth();
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(null);
   const navigate = useNavigate();
 
-  const registerUser = async (values) => {
-    if (values.password !== values.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    try {
-      setError(null);
-      setLoading(true);
-      const res = await fetch(`${BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
-      });
-      const data = await res.json();
-
-      if (res.status === 200) {
+  const registerUserMutation = useMutation<Values, Error, Values>(
+    async (values: Values): Promise<void> => {
+      if (values.password!== values.confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+      const response = await axios.post(`${BASE_URL}/auth/signup`, values);
+      if (response.status === 201) {
         navigate("/login");
-      } else if (res.status === 400) {
-        setError(data.message);
+      } else if (response.status === 400) {
+        throw new Error(response.data.message);
       } else {
-        setError("Registration failed");
+        throw new Error("Registration failed");
       }
-    } catch (error) {
-      setError(error);
-    } finally {
-      setLoading(false);
     }
-  };
+  );
 
-  // The loginUser function logs in a user.
-  const loginUser = async (values) => {
-    try {
-      setError(null);
-      setLoading(true);
-      const res = await fetch(`${BASE_URL}/auth/login`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify(values),
-      });
-      const data = await res.json();
-
-      if (res.status === 200) {
-        login(data.token);
-        navigate("/");
-      } else if (res.status === 400) {
-        setError(data.message);
-      } else {
-        setError("Login Failed");
+  const loginUserMutation = useMutation<Values, Error, Values>(
+    async (values: Values): Promise<void> => {
+      try {
+        const response = await axios.post(`${BASE_URL}/auth/signin`, values);  
+        if (response.status === 200) {
+          login(response.data.access_token);
+          navigate("/");
+        } else if (response.status === 400) {
+          throw new Error(response.data.message);
+        } else {
+          throw new Error("Login Failed");
+        }
+      } catch (error) {
+        console.error("Error during login:", error);
       }
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
     }
-  };
+  );
 
-  return { loading, error, registerUser, loginUser };
+  return {
+    loading: registerUserMutation.isLoading || loginUserMutation.isLoading,
+    error: (registerUserMutation.error as ErrorResponse)?.message || (loginUserMutation.error as ErrorResponse)?.message || null,
+    registerUser: registerUserMutation.mutate,
+    loginUser: loginUserMutation.mutate,
+  };
 };
 
 export default useUserAPI;
