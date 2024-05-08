@@ -17,7 +17,7 @@ const Contacts = () => {
     loading,
     isModelOpened,
     toggleModal,
-    getContacts,
+    fetchContacts,
     deleteContact,
     updateContact,
   } = useContactAPI();
@@ -64,7 +64,7 @@ const Contacts = () => {
   // The handleUpdate function updates a contact
   const handleUpdate = async (id, data) => {
     await updateContact(id, { ...data });
-    getContacts();
+    fetchContacts();
     isModelOpened &&
       setshowModal((prevState) =>
         setshowModal({
@@ -110,7 +110,7 @@ const Contacts = () => {
 
   useEffect(() => {
     if (token) {
-      getContacts();
+      fetchContacts();
     }
   }, []);
 

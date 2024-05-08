@@ -125,6 +125,7 @@ const useContactAPI = () => {
     addContact: addContactMutation.mutate,
     deleteContact: deleteContactMutation.mutate,
     updateContact: updateContactMutation.mutate,
+    fetchContacts: getContactsQuery.refetch,
   };
 };
 
