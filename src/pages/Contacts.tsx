@@ -1,5 +1,6 @@
+// Contacts.tsx
 import { useEffect, useState } from "react";
-import { json, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import maleImg from "../assets/male.png";
 import femaleImg from "../assets/female.png";
 import useContactAPI from "../hooks/useContactAPI";
@@ -65,12 +66,16 @@ const Contacts = () => {
 
   const handleUpdate = async (id, updateContactData) => {
     try {
-      await updateContact(id, updateContactData);
-      await updateContactStore(id, updateContactData);
-      console.log(updateContactData, "updateContactData")
-      // Refresh the contact list
-      fetchContacts(); 
+      const updateData = {
+        id: id,
+        ...updateContactData,
+      }
+      await updateContact(updateData);
+      await updateContactStore(id, updateContactData); // Update local store
 
+      // Refresh the contact list
+      fetchContacts();
+  
       // Success message and modal handling
       setshowModal((prevState) => ({
         ...prevState,
@@ -79,7 +84,7 @@ const Contacts = () => {
       }));
     } catch (error) {
       console.error("Error updating contact:", error);
-      // Handle errors appropriately, e.g., display an error message to the user
+      // Handle errors appropriately
       setshowModal((prevState) => ({
         ...prevState,
         message: "An error occurred while saving. Please try again.",
@@ -92,6 +97,7 @@ const Contacts = () => {
       setUpdateContactData({});
     }
   };
+  
   
   
   const handleDelete = (id, name) => {

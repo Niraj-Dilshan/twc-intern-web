@@ -112,9 +112,11 @@ const useContactAPI = () => {
   
 
   const updateContactMutation = useMutation(
-    async (contactId: number, updatedContactPassed) => {
-      const updatedContact = getContact(contactId);
-      console.log(updatedContact);
+    async (updatedContactPassed:JSON) => {
+      const updatedContact = JSON.parse(JSON.stringify(updatedContactPassed));
+      const contactId = updatedContact.id;
+      // recreate json object without id
+      delete updatedContact.id;
       try {
         const response = await axiosInstance.patch(
           `/contacts/${contactId}`,

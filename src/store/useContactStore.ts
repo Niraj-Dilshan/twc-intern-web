@@ -1,3 +1,4 @@
+// useContactStore.ts
 import create from "zustand";
 
 type Contact = {
@@ -36,7 +37,6 @@ export const useContactStore = create<Store>((set, get) => ({
   },
   updateContact: (contactId: number, updatedContact: Partial<Contact>) =>
     set((state) => {
-      console.log('Updating contact:', contactId, updatedContact);
       return {
         contacts: state.contacts.map((contact) =>
           contact._id === contactId? {...contact,...updatedContact } : contact

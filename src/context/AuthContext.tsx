@@ -23,15 +23,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   loading: true,
   error: null,
   setLoading: (loading) => {
-    console.log('Setting loading:', loading);
     set({ loading });
   },
   setError: (message) => {
-    console.log('Setting error:', message);
     set({ error: message });
   },
   login: (newToken) => {
-    console.log('Logging in with token:', newToken);
     localStorage.setItem('accessToken', newToken);
     set((state) => ({
       ...state,
@@ -41,7 +38,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }));
   },
   logout: () => {
-    console.log('Logging out');
     localStorage.removeItem('accessToken');
     set((state) => ({
       ...state,
@@ -56,7 +52,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       const tokenExpirationTime = jwtDecode(storedToken).exp * 1000; // Decode token and get expiration time in milliseconds
       const currentTime = Date.now(); // Current time in milliseconds
       if (currentTime > tokenExpirationTime) {
-        console.log('Token expired, logging out');
         localStorage.removeItem('accessToken');
         set((state) => ({
           ...state,

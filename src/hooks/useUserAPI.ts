@@ -27,11 +27,9 @@ const useUserAPI = () => {
         if (response.status === 201) {
           navigate("/login");
         } else if (response.status === 400) {
-          console.log(response.data.message);
           setError(response.data.message);
           throw new Error(response.data.message);
         } else {
-          console.log(response.data.message)
           setError("Registration failed");
           throw new Error("Registration failed");
         }
@@ -53,18 +51,15 @@ const useUserAPI = () => {
     async (values: Values) => {
       try {
         const response = await axios.post(`${BASE_URL}/auth/signin`, values);
-        console.log(response.status);
         if (response.status === 200) {
           login(response.data.access_token);
           localStorage.setItem('accessToken', response.data.access_token);
           navigate("/");
         } else if (response.status === 400) {
-          console.log(response.data.message)
           setError(response.data.message);
           throw new Error(response.data.message);
         } else {
           setError("Login Failed");
-          console.log(response.data.message)
           throw new Error("Login Failed");
         }
       } catch (error) {

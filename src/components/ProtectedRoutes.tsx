@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 
 const ProtectedRoutes = ({ children }) => {
   const { isAuthenticated, loading, setLoading } = useAuthStore();
-  console.log(isAuthenticated, loading)
   const navigate = useNavigate();
 
   // after 2 seconds, set loading to false
