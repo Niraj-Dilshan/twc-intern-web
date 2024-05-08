@@ -1,10 +1,10 @@
-// AuthContext.tsx
+// Import jwt-decode for decoding JWT tokens
 import create from 'zustand';
 import { createContext, useContext, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode'; // Make sure to install jwt-decode
 
 const AuthContext = createContext();
 
-// Define types for state
 interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
@@ -14,9 +14,9 @@ interface AuthState {
   logout: () => void;
   setLoading: (loading: boolean) => void;
   setError: (message: string | null) => void;
+  checkTokenExpiration: () => void; // Method to check token expiration
 }
 
-// Create Zustand store
 export const useAuthStore = create<AuthState>((set) => ({
   token: null,
   isAuthenticated: false,
@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   login: (newToken) => {
     console.log('Logging in with token:', newToken);
-    localStorage.setItem('accessToken', newToken); // Save token to local storage
+    localStorage.setItem('accessToken', newToken);
     set((state) => ({
       ...state,
       token: newToken,
@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: () => {
     console.log('Logging out');
-    localStorage.removeItem('accessToken'); // Remove token from local storage
+    localStorage.removeItem('accessToken');
     set((state) => ({
       ...state,
       token: null,
@@ -50,19 +50,35 @@ export const useAuthStore = create<AuthState>((set) => ({
       loading: false,
     }));
   },
+  checkTokenExpiration: () => {
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      const tokenExpirationTime = jwtDecode(storedToken).exp * 1000; // Decode token and get expiration time in milliseconds
+      const currentTime = Date.now(); // Current time in milliseconds
+      if (currentTime > tokenExpirationTime) {
+        console.log('Token expired, logging out');
+        localStorage.removeItem('accessToken');
+        set((state) => ({
+          ...state,
+          token: null,
+          isAuthenticated: false,
+          loading: false,
+        }));
+      }
+    }
+  },
 }));
 
-// Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { login } = useAuthStore();
+  const { login, checkTokenExpiration } = useAuthStore();
 
-  // Initialize authentication state from local storage upon component mount
   useEffect(() => {
     const storedToken = localStorage.getItem('accessToken');
     if (storedToken) {
       login(storedToken);
     }
-  }, []); // Run only on component mount
+    checkTokenExpiration(); // Check token expiration on component mount
+  }, [login, checkTokenExpiration]);
 
   const contextValue = useAuthStore();
 
