@@ -6,6 +6,7 @@ import { z } from 'zod';
 import useUserAPI from '../../hooks/useUserAPI';
 import { Link } from 'react-router-dom';
 import ErrorPopup from '../../components/ErrorPopup';
+import { useAuthStore } from '../../context/AuthContext';
 
 // Define your Zod schema
 const loginSchema = z.object({
@@ -21,7 +22,13 @@ interface FormData {
 
 const Login: React.FC = () => {
   const [showErrorPopup, setShowErrorPopup] = useState<boolean>(false);
-  const { loading, error, loginUser } = useUserAPI();
+  const { loading, loginUser } = useUserAPI();
+  const { setLoading, setError, error } = useAuthStore(); // Accessing error state from useAuthStore
+
+  useEffect(() => {
+    setLoading(false);
+    setError(null);
+  }, []);
 
   // Initialize React Hook Form with Zod resolver
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -33,10 +40,10 @@ const Login: React.FC = () => {
   };
 
   useEffect(() => {
-    if (error) {
+    if (error) { // Check if there's an error
       handleError();
     }
-  }, [error]);
+  }, [error, setError]); // Listen for changes in the error state
 
   const handleError = () => {
     document.body.classList.add('overflow-hidden');
@@ -70,7 +77,8 @@ const Login: React.FC = () => {
             placeholder="e-mail"
             className="mb-7 rounded-full font-['poppins'] text-[25px] leading-[50px] font-medium p-0.5 pl-10 text-[#083F46] h-[3.4rem] w-[30rem]"
           />
-          {errors.email?.message?? ''}
+          {/* Show authentication error if exists */}
+          {error && <span className="text-red-500">{error}</span>}
 
           <input
             {...register('password')}
@@ -80,7 +88,7 @@ const Login: React.FC = () => {
             placeholder="password"
             className="mb-7 rounded-full font-['poppins'] text-[25px] leading-[50px] font-medium p-0.5 pl-10 text-[#083F46] h-[3.4rem] w-[30rem]"
           />
-          {errors.password?.message?? ''}
+          {errors.password?.message ?? ''}
 
           <div className="flex flex-row items-center justify-start mt-14 font-['poppins'] text-[1.438rem] leading-[3.125rem] text-white">
             <button
@@ -88,7 +96,7 @@ const Login: React.FC = () => {
               disabled={loading}
               className="px-12 py-1 border-[2px] rounded-full"
             >
-              {loading? "Wait..." : "login"}
+              {loading ? "Wait..." : "login"}
             </button>{" "}
             <p className="mx-4">or</p>
             <Link to="/register" className="underline cursor-pointer">

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import useUserAPI from '../../hooks/useUserAPI';
 import { Link } from 'react-router-dom';
 import ErrorPopup from '../../components/ErrorPopup';
+import { useAuthStore } from '../../context/AuthContext';
 
 // Define your Zod schema
 const registerSchema = z.object({
@@ -25,7 +26,12 @@ interface FormData {
 
 const Register = () => {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const { loading, error, registerUser } = useUserAPI();
+  const { loading, registerUser } = useUserAPI();
+  const { error, setError } = useAuthStore();
+
+  useEffect(() => {
+    setError(null);
+  }, []);
 
   // Initialize React Hook Form with Zod resolver
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({

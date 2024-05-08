@@ -20,9 +20,7 @@ function App() {
         {
           index: true,
           element: (
-            <ProtectedRoutes>
               <Home />
-            </ProtectedRoutes>
           ),
         },
         {
@@ -31,17 +29,13 @@ function App() {
             {
               index: true,
               element: (
-                <ProtectedRoutes>
                   <Contacts />
-                </ProtectedRoutes>
               ),
             },
             {
               path: "new",
               element: (
-                <ProtectedRoutes>
                   <NewContact />
-                </ProtectedRoutes>
               ),
             },
           ],

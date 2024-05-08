@@ -6,29 +6,46 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
+  error: string | null;
   login: (newToken: string) => void;
   logout: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (message: string | null) => void;
 }
 
 // Create Zustand store
-const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   token: null,
   isAuthenticated: false,
   loading: true,
-  login: (newToken) =>
+  error: null,
+  setLoading: (loading) => {
+    console.log('Setting loading:', loading);
+    set({ loading });
+  },
+  setError: (message) => {
+    console.log('Setting error:', message);
+    set({ error: message });
+  },
+  login: (newToken) => {
+    console.log('Logging in with token:', newToken);
     set((state) => ({
-     ...state,
+      ...state,
       token: newToken,
       isAuthenticated: true,
       loading: false,
-    })),
-  logout: () =>
+    }));
+  },
+  logout: () => {
+    console.log('Logging out');
     set((state) => ({
-     ...state,
+      ...state,
       token: null,
       isAuthenticated: false,
       loading: false,
-    })),
+    }));
+    localStorage.removeItem('accessToken');
+  },
 }));
 
 // Export context for use in components
@@ -36,29 +53,19 @@ export const AuthContext = createContext<AuthState | undefined>(undefined);
 
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const authStore = useAuthStore();
-  const { token, isAuthenticated, loading, login, logout } = authStore;
+  const { login } = useAuthStore();
 
   // Fetch token from local storage
   useEffect(() => {
-    const storedData = localStorage.getItem('user_data');
+    const storedData = localStorage.getItem('accessToken');
     if (storedData) {
-      const { userToken } = JSON.parse(storedData);
-      if (userToken) {
-        login(userToken);
-      }
+      login(storedData);
     }
-  }, [login]);
+  }, []);
 
-  const contextValue = {
-    token,
-    isAuthenticated,
-    loading,
-    login,
-    logout,
-  };
+  const store = useAuthStore();
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={store}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to use AuthContext
