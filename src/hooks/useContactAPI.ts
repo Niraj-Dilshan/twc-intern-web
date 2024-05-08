@@ -1,7 +1,8 @@
 import { useQuery, useMutation } from "react-query";
 import axios, { AxiosError } from "axios";
 import { useContactStore } from "../store/useContactStore";
-import { useAuthStore } from "../context/AuthContext"; // Import the useAuth hook
+import { useAuthStore } from "../context/AuthContext";
+import { useState } from "react";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -9,9 +10,10 @@ const useContactAPI = () => {
   const { token: authStoreToken } = useAuthStore();
   const {
     addContact,
-    getContacts,
+    updateContact,
     deleteContact,
     setError,
+    getContact,
   } = useContactStore();
 
   // Fallback to localStorage if token is not available in useAuthStore
@@ -25,8 +27,6 @@ const useContactAPI = () => {
       'Accept': 'application/json',
     },
   });
-  
-  console.log(token);
 
   const handleAxiosError = (error: AxiosError) => {
     if (axios.isAxiosError(error)) {
@@ -38,6 +38,12 @@ const useContactAPI = () => {
       setError(error.message);
     }
     throw error;
+  };
+
+  const [isModelOpened, setIsModelOpened] = useState(false);
+
+  const toggleModal = () => {
+    setIsModelOpened(!isModelOpened);
   };
 
   const fetchContacts = async () => {
@@ -61,13 +67,19 @@ const useContactAPI = () => {
     }
   };
 
+   // Define the useQuery hook to fetch contacts data
+   const { refetch } = useQuery("contacts", fetchContacts, {
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+
   const addContactMutation = useMutation(
     async (contact) => {
       try {
         const response = await axiosInstance.post("/contacts", contact);
         if (response.status === 201) {
           addContact(contact);
-          getContacts();
+          await refetch();
           return contact;
         } else {
           throw new Error("Failed to add contact");
@@ -83,8 +95,11 @@ const useContactAPI = () => {
       try {
         const response = await axiosInstance.delete(`/contacts/${contactId}`);
         if (response.status === 200) {
+          // Delete the contact locally before fetching new contacts
           deleteContact(contactId);
-          getContacts();
+          // Fetch contacts again after deleting the contact
+          await refetch();
+          toggleModal();
           return "Contact deleted";
         } else {
           throw new Error("Failed to delete contact");
@@ -94,16 +109,20 @@ const useContactAPI = () => {
       }
     }
   );
+  
 
   const updateContactMutation = useMutation(
-    async (contactId: number, updatedContact) => {
+    async (contactId: number, updatedContactPassed) => {
+      const updatedContact = getContact(contactId);
+      console.log(updatedContact);
       try {
-        const response = await axiosInstance.put(
+        const response = await axiosInstance.patch(
           `/contacts/${contactId}`,
           updatedContact
         );
         if (response.status === 200) {
-          getContacts();
+          updateContact(contactId, updatedContact);
+          await refetch();
         } else {
           throw new Error("Failed to update contact");
         }
@@ -126,6 +145,8 @@ const useContactAPI = () => {
     deleteContact: deleteContactMutation.mutate,
     updateContact: updateContactMutation.mutate,
     fetchContacts: getContactsQuery.refetch,
+    toggleModal,
+    isModelOpened,
   };
 };
 

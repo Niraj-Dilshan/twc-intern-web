@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { json, Link } from "react-router-dom";
 import maleImg from "../assets/male.png";
 import femaleImg from "../assets/female.png";
 import useContactAPI from "../hooks/useContactAPI";
@@ -8,6 +8,7 @@ import trash from "../assets/trash.svg";
 import change from "../assets/change.svg";
 import MessageModal from "../components/MessageModal";
 import { useAuth } from "../context/AuthContext";
+import { useContactStore } from "../store/useContactStore";
 
 // The Contacts component displays a list of contacts.
 const Contacts = () => {
@@ -21,6 +22,7 @@ const Contacts = () => {
     deleteContact,
     updateContact,
   } = useContactAPI();
+  const { updateContact: updateContactStore } = useContactStore();
 
   const [index, setIndex] = useState(null);
   const [selectedContact, setSelectedContact] = useState({});
@@ -61,56 +63,65 @@ const Contacts = () => {
     }));
   };
 
-  // The handleUpdate function updates a contact
-  const handleUpdate = async (id, data) => {
-    await updateContact(id, { ...data });
-    fetchContacts();
-    isModelOpened &&
-      setshowModal((prevState) =>
-        setshowModal({
-          ...prevState,
+  const handleUpdate = async (id, updateContactData) => {
+    try {
+      await updateContact(id, updateContactData);
+      await updateContactStore(id, updateContactData);
+      console.log(updateContactData, "updateContactData")
+      // Refresh the contact list
+      fetchContacts(); 
 
-          message: `Your contact has been saved successfully!`,
-          confirmationModal: false,
-        })
-      );
-    setIndex(null);
-    setSelectedContact({});
-    setUpdateContactData({});
+      // Success message and modal handling
+      setshowModal((prevState) => ({
+        ...prevState,
+        message: "Your contact has been saved successfully!",
+        confirmationModal: false,
+      }));
+    } catch (error) {
+      console.error("Error updating contact:", error);
+      // Handle errors appropriately, e.g., display an error message to the user
+      setshowModal((prevState) => ({
+        ...prevState,
+        message: "An error occurred while saving. Please try again.",
+        confirmationModal: false,
+      }));
+    } finally {
+      // Always reset the update state after success or failure
+      setIndex(null);
+      setSelectedContact({});
+      setUpdateContactData({});
+    }
   };
-
-  // The handleDelete function deletes a contact
+  
+  
   const handleDelete = (id, name) => {
     setSelectedContact({ _id: id });
-    toggleModal();
+    toggleModal(); // This should toggle the modal to show the confirmation message
     setshowModal((prevState) => ({
       ...prevState,
-      message: `Do you want to delete the contact "${name}" ?`,
+      message: `Do you want to delete the contact "${name}"?`,
       confirmationModal: true,
     }));
   };
 
   // The onConfirmation function confirms the deletion of a contact
-  const onConfirmation = (choice) => {
-    //setIsConfirmation(!isConfirmation);
+  const onConfirmation = async (choice) => {
     if (choice) {
-      deleteContact(selectedContact._id);
+      await deleteContact(selectedContact._id);
+      fetchContacts(); // Fetch updated list of contacts
+      setshowModal((prevState) => ({
+        ...prevState,
+        message: `Your contact has been deleted successfully!`,
+        confirmationModal: false,
+      }));
+      window.location.reload();
     }
-
-    isModelOpened &&
-      setshowModal((prevState) =>
-        setshowModal({
-          ...prevState,
-
-          message: `Your contact has been deleted successfully!`,
-          confirmationModal: false,
-        })
-      );
   };
 
   useEffect(() => {
     if (token) {
       fetchContacts();
+      window.location.reload();
     }
   }, []);
 
