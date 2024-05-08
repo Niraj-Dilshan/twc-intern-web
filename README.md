@@ -1,4 +1,4 @@
-# TWC TEST WEB (Simple Contacts Management Web Application)
+# TWC INTERN TEST WEB (Simple Contacts Management Web Application)
 
 ## Description
 
@@ -19,11 +19,11 @@ https://github.com/Niraj-Dilshan/twc-test-web/assets/61787989/fa53f87e-2313-4d3d
 
   1. Clone the repository (API):
      ```
-     git clone https://github.com/Niraj-Dilshan/twc-test-api.git
+     git clone https://github.com/Niraj-Dilshan/twc-intern-api.git
      ```
   2. Open directory:
      ```
-     cd twc-test-api
+     cd twc-intern-api
      ```
   3. Install dependencies:
      ```
@@ -35,9 +35,8 @@ https://github.com/Niraj-Dilshan/twc-test-web/assets/61787989/fa53f87e-2313-4d3d
      ```
   5. Update the .env file with the following information:
      ```
-     PORT=3001 #port number
-     MONGODB_URI=mongodb://localhost/db #mobgodb url
-     SECRET_KEY=SecretKey #secret key
+     DATABASE_URL="mysql://admin:admin@1234!@localhost:3306/twc?schema=public"
+     JWT_SECRET="SupreSecretKey@1234!@#"
      ```
   6. Back to root directory
      ```
@@ -45,11 +44,11 @@ https://github.com/Niraj-Dilshan/twc-test-web/assets/61787989/fa53f87e-2313-4d3d
      ```
   7. Clone the repository (Web):
      ```
-     git clone https://github.com/Niraj-Dilshan/twc-test-web.git
+     git clone https://github.com/Niraj-Dilshan/twc-intern-web.git
      ```
   8. Open directory:
      ```
-     cd twc-test-web
+     cd twc-intern-web
      ```
   9. Install dependencies:
      ```
@@ -72,7 +71,7 @@ https://github.com/Niraj-Dilshan/twc-test-web/assets/61787989/fa53f87e-2313-4d3d
      ```
   2. Start API:
      ```
-     npm start
+     npm run start
      ```
   3. Open directory(WEB):
      ```
