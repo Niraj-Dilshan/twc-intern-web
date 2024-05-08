@@ -1,24 +1,32 @@
-import { useRef } from "react";
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import useContactAPI from "../hooks/useContactAPI";
+import { useNavigate } from "react-router-dom";
+
+// Define the schema for contact data using Zod
+const contactSchema = z.object({
+  name: z.string().nonempty(),
+  email: z.string().email(),
+  phone: z.string().nonempty(),
+  gender: z.enum(["male", "female"]),
+});
 
 // The NewContact component is used to add a new contact.
 const NewContact = () => {
-  const formRef = useRef();
 
-  const { loading, error, addContact, getContacts, contacts } = useContactAPI();
+  const navigate = useNavigate();
+  const { loading, addContact } = useContactAPI();
 
-  // The handleSubmit function is called when the form is submitted.
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const formRefData = {
-      name: formRef.current.fullName.value,
-      email: formRef.current.email.value,
-      phone: formRef.current.phoneNumber.value,
-      gender: formRef.current.gender.value,
-    };
+  const { register, control, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(contactSchema), // Use Zod resolver for validation
+  });
 
-    addContact(formRefData);
-    formRef.current.reset();
+  // The onSubmit function is called when the form is submitted.
+  const onSubmit = (data) => {
+    addContact(data);
+    handleSubmit(() => { });
+    navigate("/contacts");
   };
 
   return (
@@ -28,7 +36,7 @@ const NewContact = () => {
           New Contact
         </h1>
 
-        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col ">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col ">
           <div className="flex flex-row justify-start gap-10 items-center">
             <input
               type="text"
@@ -36,15 +44,21 @@ const NewContact = () => {
               name="fullName"
               placeholder="full name"
               className="mb-7 rounded-full font-['poppins'] text-[25px] leading-[50px]  font-medium p-0.5 pl-10 text-[#083F46]  h-[3.4rem] w-[30rem]"
+              {...register("name")}
             />
+            {/* Display error message if validation fails */}
+            {errors.fullName && <p className="text-red-500">{errors.fullName.message}</p>}
             <input
               type="email"
               id="email"
               name="email"
               placeholder="e-mail"
               className="mb-7 rounded-full font-['poppins'] text-[25px] leading-[50px]  font-medium p-0.5 pl-10 text-[#083F46]  h-[3.4rem] w-[30rem]"
+              {...register("email")}
             />
           </div>
+          {/* Display error message if validation fails */}
+          {errors.email && <p className="text-red-500">{errors.email.message}</p>}
           <div className="flex flex-row justify-start gap-10 items-center">
             <input
               type="text"
@@ -52,29 +66,24 @@ const NewContact = () => {
               name="phoneNumber"
               placeholder="phone number"
               className="mb-7 rounded-full font-['poppins'] text-[25px] leading-[50px]  font-medium p-0.5 pl-10 text-[#083F46]  h-[3.4rem] w-[30rem]"
+              {...register("phone")}
             />
+            {/* Display error message if validation fails */}
+            {errors.phoneNumber && <p className="text-red-500">{errors.phoneNumber.message}</p>}
             <div className="flex flex-row justify-between items-center w-[30rem] font-['poppins'] text-[25px] leading-[50px]  font-medium  text-white">
-              <label>gender</label>
-              <span>
-                <input
-                  type="radio"
-                  id="male"
-                  name="gender"
-                  className="mr-2 w-5 h-5 border-1 cursor-pointer  rounded-full"
-                  value={"male"}
-                />
-                <label htmlFor="male">male</label>
-              </span>
-              <span>
-                <input
-                  type="radio"
-                  id="female"
-                  name="gender"
-                  className="mr-2 w-5 h-5 border-1 cursor-pointer  rounded-full"
-                  value={"female"}
-                />
-                <label htmlFor="female">female</label>
-              </span>
+              <label>Gender</label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <>
+                    <input {...field} type="radio" value="male" />
+                    <label htmlFor="male">male</label>
+                    <input {...field} type="radio" value="female" />
+                    <label htmlFor="female">female</label>
+                  </>
+                )}
+              />
             </div>
           </div>
           <button

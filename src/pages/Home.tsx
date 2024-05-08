@@ -8,8 +8,8 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && contacts.length === 0 && !error) {
-      navigate("/contacts/new"); // Redirect only if there are no contacts and no error
+    if (!loading && contacts.length > 0 ) {
+      navigate("/contacts");
     }
   }, [loading, contacts, navigate, error]);
 
