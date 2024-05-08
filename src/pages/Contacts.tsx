@@ -114,14 +114,13 @@ const Contacts = () => {
         message: `Your contact has been deleted successfully!`,
         confirmationModal: false,
       }));
-      window.location.reload();
+      
     }
   };
 
   useEffect(() => {
     if (token) {
       fetchContacts();
-      window.location.reload();
     }
   }, []);
 

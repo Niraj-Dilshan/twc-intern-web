@@ -1,21 +1,30 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Assuming useAuth is correctly implemented
+import { useEffect } from "react";
+import { useAuthStore } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-const ProtectedRoutes = () => {
-  const { isAuthenticated, loading } = useAuth(); // Use the useAuth hook to get the authentication state
+const ProtectedRoutes = ({ children }) => {
+  const { isAuthenticated, loading, setLoading } = useAuthStore();
+  console.log(isAuthenticated, loading)
+  const navigate = useNavigate();
 
-  // If loading, wait until the authentication state is determined
+  // after 2 seconds, set loading to false
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, loading]);
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  // If not authenticated, redirect to the login page
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // If authenticated, render the child routes
-  return <Outlet />;
+  return isAuthenticated ? children : null;
 };
 
 export default ProtectedRoutes;

@@ -1,5 +1,8 @@
+// AuthContext.tsx
 import create from 'zustand';
 import { createContext, useContext, useEffect } from 'react';
+
+const AuthContext = createContext();
 
 // Define types for state
 interface AuthState {
@@ -29,6 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   login: (newToken) => {
     console.log('Logging in with token:', newToken);
+    localStorage.setItem('accessToken', newToken); // Save token to local storage
     set((state) => ({
       ...state,
       token: newToken,
@@ -38,41 +42,31 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout: () => {
     console.log('Logging out');
+    localStorage.removeItem('accessToken'); // Remove token from local storage
     set((state) => ({
       ...state,
       token: null,
       isAuthenticated: false,
       loading: false,
     }));
-    localStorage.removeItem('accessToken');
   },
 }));
-
-// Export context for use in components
-export const AuthContext = createContext<AuthState | undefined>(undefined);
 
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { login } = useAuthStore();
 
-  // Fetch token from local storage
+  // Initialize authentication state from local storage upon component mount
   useEffect(() => {
-    const storedData = localStorage.getItem('accessToken');
-    if (storedData) {
-      login(storedData);
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      login(storedToken);
     }
-  }, []);
+  }, []); // Run only on component mount
 
-  const store = useAuthStore();
+  const contextValue = useAuthStore();
 
-  return <AuthContext.Provider value={store}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 };
 
-// Custom hook to use AuthContext
-export const useAuth = (): AuthState => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

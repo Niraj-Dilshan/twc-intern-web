@@ -2,9 +2,11 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useContactAPI from "../hooks/useContactAPI";
+import { useAuthStore } from "../context/AuthContext";
 
 const Home = () => {
-  const { loading, error, contacts } = useContactAPI();
+  const { error, contacts } = useContactAPI();
+  const { loading } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
