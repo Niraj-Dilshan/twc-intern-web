@@ -12,6 +12,16 @@ interface Values {
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
+// Create an Axios instance with withCredentials set to true
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
 const useUserAPI = () => {
   const { login } = useAuthStore();
   const { setError } = useAuthStore();
@@ -20,10 +30,10 @@ const useUserAPI = () => {
   const registerUserMutation = useMutation<Values, AxiosError, Values>(
     async (values: Values) => {
       try {
-        if (values.password !== values.confirmPassword) {
+        if (values.password!== values.confirmPassword) {
           throw new Error("Passwords do not match");
         }
-        const response = await axios.post(`${BASE_URL}/auth/signup`, values);
+        const response = await axiosInstance.post('/auth/signup', values);
         if (response.status === 201) {
           navigate("/login");
         } else if (response.status === 400) {
@@ -46,11 +56,10 @@ const useUserAPI = () => {
     }
   );
 
-  // Adjusted loginUserMutation
   const loginUserMutation = useMutation<Values, AxiosError, Values>(
     async (values: Values) => {
       try {
-        const response = await axios.post(`${BASE_URL}/auth/signin`, values);
+        const response = await axiosInstance.post('/auth/signin', values);
         if (response.status === 200) {
           login(response.data.access_token);
           localStorage.setItem('accessToken', response.data.access_token);
